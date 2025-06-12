@@ -1,0 +1,375 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Registrarse - Secure App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Cuenta
+                </h3>
+                <p class="mb-0 mt-2">Únete a Secure App y protege tus contraseñas</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="registerForm">
+                    {% csrf_token %}
+                    
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">
+                            <i class="fas fa-user me-1"></i>Nombre *
+                        </label>
+                        <input type="text" class="form-control" id="first_name" name="first_name" required
+                               placeholder="Tu nombre" value="{{ form.first_name.value|default:'' }}">
+                        {% if form.first_name.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.first_name.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Apellido -->
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">
+                            <i class="fas fa-user me-1"></i>Apellido
+                        </label>
+                        <input type="text" class="form-control" id="last_name" name="last_name"
+                               placeholder="Tu apellido" value="{{ form.last_name.value|default:'' }}">
+                        {% if form.last_name.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.last_name.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>Email *
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" required
+                               placeholder="tu@email.com" value="{{ form.email.value|default:'' }}">
+                        <div class="form-text">
+                            Tu email será usado para verificación y recuperación de cuenta
+                        </div>
+                        {% if form.email.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.email.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Contraseña *
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" required
+                                   placeholder="Contraseña segura">
+                            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength mt-2">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar" id="strengthBar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <small id="strengthText" class="text-muted">Ingresa una contraseña</small>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.password.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Confirmar Contraseña -->
+                    <div class="mb-3">
+                        <label for="password_confirm" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Confirmar Contraseña *
+                        </label>
+                        <input type="password" class="form-control" id="password_confirm" name="password_confirm" required
+                               placeholder="Repite tu contraseña">
+                        <div id="passwordMatch" class="form-text"></div>
+                        {% if form.password_confirm.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.password_confirm.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Términos y condiciones -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="terms_accepted" name="terms_accepted" required>
+                        <label class="form-check-label" for="terms_accepted">
+                            Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">términos y condiciones</a> 
+                            y la <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">política de privacidad</a> *
+                        </label>
+                        {% if form.terms_accepted.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.terms_accepted.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Submit button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                            <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                            <i class="fas fa-user-plus me-2"></i>
+                            Crear Cuenta
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Links -->
+                <div class="text-center mt-4">
+                    <p class="mb-0">
+                        ¿Ya tienes cuenta? 
+                        <a href="{% url 'auth:login' %}" class="text-decoration-none">
+                            <i class="fas fa-sign-in-alt me-1"></i>Inicia sesión aquí
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Social registration -->
+                <hr class="my-4">
+                <div class="text-center">
+                    <p class="text-muted mb-3">O regístrate con:</p>
+                    <a href="{% url 'auth:google-login' %}" class="btn btn-outline-danger">
+                        <i class="fab fa-google me-2"></i>Google
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security info -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="text-center mb-3">
+                    <i class="fas fa-shield-alt me-2"></i>Tu Seguridad es Nuestra Prioridad
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <i class="fas fa-lock text-primary mb-2"></i>
+                        <small class="d-block">Cifrado AES-256</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-eye-slash text-success mb-2"></i>
+                        <small class="d-block">Zero Knowledge</small>
+                    </div>
+                    <div class="col-4">
+                        <i class="fas fa-mobile-alt text-warning mb-2"></i>
+                        <small class="d-block">2FA Opcional</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Términos y Condiciones Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Términos y Condiciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>1. Aceptación de Términos</h6>
+                <p>Al usar Secure App, aceptas estos términos de servicio.</p>
+                
+                <h6>2. Uso del Servicio</h6>
+                <p>Secure App es un servicio de gestión de contraseñas que utiliza cifrado de extremo a extremo.</p>
+                
+                <h6>3. Responsabilidad del Usuario</h6>
+                <p>Eres responsable de mantener segura tu contraseña maestra y dispositivos de acceso.</p>
+                
+                <h6>4. Privacidad y Seguridad</h6>
+                <p>Implementamos medidas de seguridad estrictas pero no podemos garantizar seguridad absoluta.</p>
+                
+                <h6>5. Limitación de Responsabilidad</h6>
+                <p>Secure App no será responsable por pérdidas de datos o accesos no autorizados.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Política de Privacidad Modal -->
+<div class="modal fade" id="privacyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Política de Privacidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Recopilación de Información</h6>
+                <p>Recopilamos solo la información necesaria para proporcionar el servicio.</p>
+                
+                <h6>Uso de la Información</h6>
+                <p>Tu información se usa únicamente para operación del servicio y mejoras.</p>
+                
+                <h6>Cifrado y Seguridad</h6>
+                <p>Todos los datos sensibles se cifran localmente antes de la transmisión.</p>
+                
+                <h6>Compartir Información</h6>
+                <p>No compartimos tu información personal con terceros sin tu consentimiento.</p>
+                
+                <h6>Retención de Datos</h6>
+                <p>Los datos se retienen mientras mantengas tu cuenta activa.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Toggle password visibility
+    $('#togglePassword').click(function() {
+        const passwordField = $('#password');
+        const icon = $(this).find('i');
+        
+        if (passwordField.attr('type') === 'password') {
+            passwordField.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            passwordField.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Password strength checker
+    $('#password').on('input', function() {
+        const password = $(this).val();
+        const result = checkPasswordStrength(password);
+        const strengthBar = $('#strengthBar');
+        const strengthText = $('#strengthText');
+        
+        // Update progress bar
+        let width = 0;
+        let color = 'bg-danger';
+        let text = 'Muy débil';
+        
+        if (result.strength >= 4) {
+            width = 100;
+            color = 'bg-success';
+            text = 'Muy fuerte';
+        } else if (result.strength >= 3) {
+            width = 75;
+            color = 'bg-info';
+            text = 'Fuerte';
+        } else if (result.strength >= 2) {
+            width = 50;
+            color = 'bg-warning';
+            text = 'Regular';
+        } else if (result.strength >= 1) {
+            width = 25;
+            color = 'bg-danger';
+            text = 'Débil';
+        }
+        
+        strengthBar.removeClass('bg-danger bg-warning bg-info bg-success').addClass(color);
+        strengthBar.css('width', width + '%');
+        strengthText.text(text);
+        
+        if (result.feedback.length > 0) {
+            strengthText.text(text + ' - ' + result.feedback.join(', '));
+        }
+        
+        validateForm();
+    });
+
+    // Confirm password match
+    $('#password_confirm').on('input', function() {
+        const password = $('#password').val();
+        const confirmPassword = $(this).val();
+        const matchDiv = $('#passwordMatch');
+        
+        if (confirmPassword === '') {
+            matchDiv.text('').removeClass('text-success text-danger');
+        } else if (password === confirmPassword) {
+            matchDiv.text('Las contraseñas coinciden').removeClass('text-danger').addClass('text-success');
+        } else {
+            matchDiv.text('Las contraseñas no coinciden').removeClass('text-success').addClass('text-danger');
+        }
+        
+        validateForm();
+    });
+
+    // Form validation
+    function validateForm() {
+        const password = $('#password').val();
+        const confirmPassword = $('#password_confirm').val();
+        const email = $('#email').val();
+        const firstName = $('#first_name').val();
+        const termsAccepted = $('#terms_accepted').is(':checked');
+        const submitBtn = $('#submitBtn');
+        
+        const passwordResult = checkPasswordStrength(password);
+        const passwordsMatch = password === confirmPassword && password !== '';
+        const emailValid = email.includes('@') && email.includes('.');
+        
+        const isValid = passwordResult.strength >= 3 && passwordsMatch && emailValid && 
+                       firstName.length >= 2 && termsAccepted;
+        
+        submitBtn.prop('disabled', !isValid);
+    }
+
+    // Validate on all input changes
+    $('#registerForm input').on('input change', validateForm);
+
+    // Handle form submission
+    $('#registerForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = $('#submitBtn');
+        showLoading(submitBtn);
+        
+        $.ajax({
+            url: '{% url "auth:ajax-register" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('Cuenta creada exitosamente. Verifica tu email para continuar.', 'success');
+                    setTimeout(function() {
+                        window.location.href = '{% url "auth:login" %}';
+                    }, 2000);
+                } else {
+                    if (response.errors) {
+                        for (let field in response.errors) {
+                            showAlert(response.errors[field][0], 'error');
+                        }
+                    } else {
+                        showAlert(response.error || 'Error al crear la cuenta', 'error');
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                showAlert('Error de conexión. Inténtalo de nuevo.', 'error');
+            },
+            complete: function() {
+                hideLoading(submitBtn);
+            }
+        });
+    });
+
+    // Initial validation
+    validateForm();
+});
+</script>
+{% endblock %}

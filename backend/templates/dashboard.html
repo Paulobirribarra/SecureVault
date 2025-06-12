@@ -1,0 +1,264 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Dashboard - Secure App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    {% if user.is_authenticated %}
+                        Bienvenido, {{ user.get_full_name }}
+                    {% else %}
+                        Bienvenido a Secure App
+                    {% endif %}
+                </h2>
+            </div>
+            <div class="card-body">
+                {% if user.is_authenticated %}
+                    <!-- Verificación de email -->
+                    {% if not user.email_verified %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Verificación Pendiente:</strong> 
+                            Tu email no ha sido verificado. 
+                            <a href="{% url 'auth:resend-verification' %}" class="alert-link">Reenviar email de verificación</a>
+                        </div>
+                    {% endif %}
+
+                    <!-- Estadísticas del usuario -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number">{{ vault_stats.total_items|default:0 }}</div>
+                                <div>Entradas en el Baúl</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number">{{ vault_stats.login_items|default:0 }}</div>
+                                <div>Credenciales</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number">{{ vault_stats.secure_notes|default:0 }}</div>
+                                <div>Notas Seguras</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stats-card">
+                                <div class="stats-number">{{ security_score|default:0 }}%</div>
+                                <div>Puntuación de Seguridad</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Acciones rápidas -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h4><i class="fas fa-bolt me-2"></i>Acciones Rápidas</h4>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-plus-circle feature-icon"></i>
+                                    <h5>Agregar Credencial</h5>
+                                    <p class="text-muted">Guarda una nueva cuenta de forma segura</p>
+                                    <a href="{% url 'core:add-login' %}" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i>Agregar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-key feature-icon"></i>
+                                    <h5>Generar Contraseña</h5>
+                                    <p class="text-muted">Crea contraseñas seguras al instante</p>
+                                    <a href="{% url 'core:password-generator' %}" class="btn btn-success">
+                                        <i class="fas fa-magic me-1"></i>Generar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-shield-virus feature-icon"></i>
+                                    <h5>Análisis de Seguridad</h5>
+                                    <p class="text-muted">Revisa la seguridad de tus contraseñas</p>
+                                    <a href="{% url 'core:security-center' %}" class="btn btn-warning">
+                                        <i class="fas fa-search me-1"></i>Analizar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cog feature-icon"></i>
+                                    <h5>Configuración</h5>
+                                    <p class="text-muted">Ajusta tu perfil y seguridad</p>
+                                    <a href="{% url 'auth:profile' %}" class="btn btn-secondary">
+                                        <i class="fas fa-user-cog me-1"></i>Configurar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Entradas recientes -->
+                    {% if recent_items %}
+                        <div class="row">
+                            <div class="col-12">
+                                <h4><i class="fas fa-history me-2"></i>Actividad Reciente</h4>
+                                <div class="card">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th><i class="fas fa-tag me-1"></i>Nombre</th>
+                                                        <th><i class="fas fa-folder me-1"></i>Tipo</th>
+                                                        <th><i class="fas fa-clock me-1"></i>Modificado</th>
+                                                        <th><i class="fas fa-eye me-1"></i>Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in recent_items %}
+                                                        <tr class="vault-item">
+                                                            <td>
+                                                                <i class="fas fa-{% if item.item_type == 'login' %}key{% elif item.item_type == 'note' %}sticky-note{% elif item.item_type == 'card' %}credit-card{% else %}user{% endif %} me-2"></i>
+                                                                {{ item.name }}
+                                                                {% if item.is_favorite %}
+                                                                    <i class="fas fa-star text-warning ms-1"></i>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-primary">{{ item.get_item_type_display }}</span>
+                                                            </td>
+                                                            <td>{{ item.updated_at|timesince }} ago</td>
+                                                            <td>
+                                                                <a href="{% url 'core:view-item' item.id %}" class="btn btn-sm btn-outline-primary">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+                                                                <a href="{% url 'core:edit-item' item.id %}" class="btn btn-sm btn-outline-secondary">
+                                                                    <i class="fas fa-edit"></i>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'core:vault' %}" class="btn btn-primary">
+                                        <i class="fas fa-lock me-1"></i>Ver Todo el Baúl
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="card text-center">
+                                    <div class="card-body py-5">
+                                        <i class="fas fa-lock feature-icon"></i>
+                                        <h4>Tu Baúl está Vacío</h4>
+                                        <p class="text-muted mb-4">
+                                            Comienza guardando tu primera credencial de forma segura.
+                                            Toda la información se cifra localmente antes de almacenarse.
+                                        </p>
+                                        <a href="{% url 'core:add-login' %}" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-plus me-2"></i>Agregar Primera Credencial
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                {% else %}
+                    <!-- Usuario no autenticado -->
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h3><i class="fas fa-shield-alt me-2"></i>Tu Baúl de Contraseñas Seguro</h3>
+                            <p class="lead">
+                                Secure App utiliza cifrado AES-256 de grado militar para proteger tus contraseñas, 
+                                notas seguras y información personal.
+                            </p>
+                            
+                            <div class="d-grid gap-2 d-md-block">
+                                <a href="{% url 'auth:register' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-user-plus me-2"></i>Crear Cuenta Gratis
+                                </a>
+                                <a href="{% url 'auth:login' %}" class="btn btn-outline-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="row">
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card h-100 text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-lock feature-icon"></i>
+                                            <h5>Cifrado AES-256</h5>
+                                            <p class="text-muted">Cifrado de grado militar para máxima seguridad</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card h-100 text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-mobile-alt feature-icon"></i>
+                                            <h5>2FA Incluido</h5>
+                                            <p class="text-muted">Autenticación de dos factores para mayor protección</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card h-100 text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-sync feature-icon"></i>
+                                            <h5>Sincronización</h5>
+                                            <p class="text-muted">Accede a tus datos desde cualquier dispositivo</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="card h-100 text-center">
+                                        <div class="card-body">
+                                            <i class="fas fa-eye-slash feature-icon"></i>
+                                            <h5>Zero Knowledge</h5>
+                                            <p class="text-muted">Solo tú puedes ver tus datos descifrados</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-refresh estadísticas cada 5 minutos si está autenticado
+    {% if user.is_authenticated %}
+        setInterval(function() {
+            // Aquí podrías hacer una llamada AJAX para actualizar estadísticas
+            // sin recargar toda la página
+        }, 5 * 60 * 1000);
+    {% endif %}
+</script>
+{% endblock %}

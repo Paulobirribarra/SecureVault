@@ -1,0 +1,202 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Iniciar Sesión - Secure App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                </h3>
+                <p class="mb-0 mt-2">Accede a tu baúl de contraseñas seguro</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" id="loginForm">
+                    {% csrf_token %}
+                    
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </label>
+                        <input type="email" class="form-control" id="email" name="email" required
+                               placeholder="tu@email.com" value="{{ form.email.value|default:'' }}">
+                        {% if form.email.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.email.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock me-1"></i>Contraseña
+                        </label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" required
+                                   placeholder="Tu contraseña">
+                            <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form.password.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- 2FA Code (hidden by default) -->
+                    <div class="mb-3" id="twoFactorGroup" style="display: none;">
+                        <label for="totp_code" class="form-label">
+                            <i class="fas fa-mobile-alt me-1"></i>Código de Verificación (2FA)
+                        </label>
+                        <input type="text" class="form-control" id="totp_code" name="totp_code" 
+                               placeholder="123456" maxlength="6">
+                        <div class="form-text">
+                            Ingresa el código de 6 dígitos de tu app de autenticación
+                        </div>
+                    </div>
+
+                    <!-- Remember me -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me">
+                        <label class="form-check-label" for="remember_me">
+                            Recordarme por 30 días
+                        </label>
+                    </div>
+
+                    <!-- Submit button -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                            <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status"></span>
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Links -->
+                <div class="text-center mt-4">
+                    <p class="mb-2">
+                        <a href="{% url 'auth:password-reset' %}" class="text-decoration-none">
+                            <i class="fas fa-key me-1"></i>¿Olvidaste tu contraseña?
+                        </a>
+                    </p>
+                    <p class="mb-0">
+                        ¿No tienes cuenta? 
+                        <a href="{% url 'auth:register' %}" class="text-decoration-none">
+                            <i class="fas fa-user-plus me-1"></i>Regístrate aquí
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Social login -->
+                <hr class="my-4">
+                <div class="text-center">
+                    <p class="text-muted mb-3">O inicia sesión con:</p>
+                    <a href="{% url 'auth:google-login' %}" class="btn btn-outline-danger">
+                        <i class="fab fa-google me-2"></i>Google
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security notice -->
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Tu información está protegida con cifrado AES-256 de extremo a extremo.
+                    <br>
+                    <i class="fas fa-lock me-1"></i>
+                    Solo tú puedes acceder a tus datos descifrados.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Toggle password visibility
+    $('#togglePassword').click(function() {
+        const passwordField = $('#password');
+        const icon = $(this).find('i');
+        
+        if (passwordField.attr('type') === 'password') {
+            passwordField.attr('type', 'text');
+            icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            passwordField.attr('type', 'password');
+            icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+
+    // Handle form submission
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = $('#submitBtn');
+        const twoFactorGroup = $('#twoFactorGroup');
+        
+        showLoading(submitBtn);
+        
+        $.ajax({
+            url: '{% url "auth:ajax-login" %}',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                if (response.success) {
+                    showAlert('Inicio de sesión exitoso. Redirigiendo...', 'success');
+                    setTimeout(function() {
+                        window.location.href = response.redirect_url || '{% url "core:dashboard" %}';
+                    }, 1500);
+                } else if (response.requires_2fa) {
+                    twoFactorGroup.show();
+                    $('#totp_code').focus();
+                    showAlert('Ingresa tu código de verificación 2FA', 'info');
+                } else if (response.requires_verification) {
+                    showAlert('Tu email no está verificado. <a href="{% url "auth:resend-verification" %}">Reenviar verificación</a>', 'warning');
+                } else {
+                    showAlert(response.error || 'Error en el inicio de sesión', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showAlert('Error de conexión. Inténtalo de nuevo.', 'error');
+            },
+            complete: function() {
+                hideLoading(submitBtn);
+            }
+        });
+    });
+
+    // Auto-focus en código 2FA después de ingresar credenciales válidas
+    $('#email, #password').on('blur', function() {
+        if ($('#email').val() && $('#password').val()) {
+            // Podrías hacer una verificación previa aquí si quisieras
+        }
+    });
+
+    // Formato automático para código 2FA
+    $('#totp_code').on('input', function() {
+        let value = $(this).val().replace(/\D/g, '');
+        if (value.length > 6) {
+            value = value.substring(0, 6);
+        }
+        $(this).val(value);
+        
+        // Auto-submit si tiene 6 dígitos
+        if (value.length === 6) {
+            $('#loginForm').submit();
+        }
+    });
+});
+</script>
+{% endblock %}
