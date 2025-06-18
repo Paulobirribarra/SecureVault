@@ -24,12 +24,12 @@ try {
     # Ignorar errores de Set-ExecutionPolicy en PowerShell Core
 }
 
-Set-Location (Join-Path `$projectRoot "backend")
+# Usar ruta absoluta desde donde se ejecutó el script original
+Set-Location '$PWD\backend'
 Write-Host '🔧 Configurando entorno Python...' -ForegroundColor Yellow
 
-# Usar Python específico del venv para evitar conflictos
-`$projectRoot = Split-Path -Parent `$PSScriptRoot
-`$pythonExe = Join-Path `$projectRoot "backend\venv\Scripts\python.exe"
+# Usar Python específico del venv con ruta absoluta
+`$pythonExe = '$PWD\backend\venv\Scripts\python.exe'
 
 Write-Host '🔍 Verificando Python del entorno virtual...' -ForegroundColor Yellow
 if (Test-Path `$pythonExe) {
@@ -68,7 +68,8 @@ try {
     # Ignorar errores de Set-ExecutionPolicy en PowerShell Core
 }
 
-Set-Location (Join-Path `$projectRoot "secure-app-frontend")
+# Usar ruta absoluta desde donde se ejecutó el script original
+Set-Location '$PWD\secure-app-frontend'
 
 Write-Host '🔧 Verificando directorio de trabajo...' -ForegroundColor Yellow
 Write-Host "PWD: `$((Get-Location).Path)" -ForegroundColor Gray

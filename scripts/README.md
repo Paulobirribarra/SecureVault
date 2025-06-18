@@ -61,8 +61,30 @@ Configura PostgreSQL y ejecuta migraciones.
 - 📊 Aplica migraciones a la base de datos
 - 👤 Crea superusuario (opcional)
 
-### 3. `run_servers.ps1` - Ejecutar Servidores
-Inicia backend y frontend simultáneamente.
+### 3. `run_servers_portable.ps1` - Ejecutar Servidores (PORTABLE - RECOMENDADO)
+Inicia backend y frontend automáticamente. **Funciona desde cualquier directorio.**
+
+```powershell
+.\scripts\run_servers_portable.ps1
+```
+
+**¿Qué hace?**
+- 🔍 Detecta automáticamente la raíz del proyecto
+- ✅ Verifica estructura y dependencias
+- 🐍 Inicia servidor Django (puerto 8000) en ventana separada
+- 🅰️ Inicia servidor Angular (puerto 4200) en ventana separada
+- 📂 **Funciona desde CUALQUIER directorio**
+- 👥 **Funciona para CUALQUIER usuario**
+- 🌐 Muestra URLs disponibles
+
+**Ventajas sobre el script básico:**
+- ✅ **Portable**: funciona desde cualquier ubicación
+- ✅ **Universal**: no depende del nombre de usuario
+- ✅ **Robusto**: detecta automáticamente las rutas
+- ✅ **Transferible**: fácil uso en múltiples PCs
+
+### 4. `run_servers.ps1` - Ejecutar Servidores (Básico)
+Inicia backend y frontend simultáneamente. **Requiere ejecutar desde raíz del proyecto.**
 
 ```powershell
 .\scripts\run_servers.ps1
@@ -73,7 +95,7 @@ Inicia backend y frontend simultáneamente.
 - 🅰️ Inicia servidor Angular (puerto 4200)
 - 🌐 Muestra URLs disponibles
 
-### 4. `clean_project.ps1` - Limpieza de Proyecto
+### 5. `clean_project.ps1` - Limpieza de Proyecto
 Limpia archivos temporales y resetea el proyecto.
 
 ```powershell
@@ -87,17 +109,39 @@ Limpia archivos temporales y resetea el proyecto.
 .\scripts\clean_project.ps1 -Full
 ```
 
+### 6. `test_portability.ps1` - Test de Portabilidad
+Verifica que el proyecto esté correctamente configurado para ser portable.
+
+```powershell
+.\scripts\test_portability.ps1
+```
+
+**¿Qué hace?**
+- 🔍 Verifica la estructura del proyecto
+- ✅ Confirma que todos los componentes estén presentes
+- 📋 Muestra información del sistema actual
+- 🎯 Valida que el proyecto sea transferible
+
 ## 🔄 Flujo de Trabajo Recomendado
 
 ### Primera vez (PC nuevo):
 1. `.\scripts\setup_project.ps1`
 2. Editar `backend\.env` con tu contraseña de PostgreSQL
 3. `.\scripts\setup_database.ps1`
-4. `.\scripts\run_servers.ps1`
+4. `.\scripts\run_servers_portable.ps1` ← **PORTABLE - Recomendado**
 
 ### Desarrollo diario:
 ```powershell
+# Opción 1: Portable (funciona desde cualquier directorio)
+.\scripts\run_servers_portable.ps1
+
+# Opción 2: Básico (desde raíz del proyecto)
 .\scripts\run_servers.ps1
+```
+
+### Verificar portabilidad:
+```powershell
+.\scripts\test_portability.ps1
 ```
 
 ### Cuando hay problemas:

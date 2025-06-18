@@ -21,6 +21,28 @@ SecureVault es un gestor de contraseñas seguro y moderno, similar a Bitwarden, 
 - 🔄 **Sincronización en tiempo real** entre dispositivos
 - 🚨 **Notificaciones inteligentes** para alertas de seguridad
 
+## 📦 Portabilidad Universal
+
+Este proyecto está diseñado para ser **completamente portable** y funcionar en cualquier computador Windows:
+
+- ✅ **Scripts universales**: Detectan automáticamente rutas y usuarios
+- ✅ **Sin dependencias hardcodeadas**: Usan variables de entorno y detección dinámica
+- ✅ **Fácil transferencia**: Funciona en cualquier ubicación del disco
+- ✅ **Múltiples usuarios**: No depende del nombre de usuario específico
+
+### 🎯 Uso en Nuevo Computador
+```powershell
+# 1. Clonar en cualquier ubicación
+git clone https://github.com/Paulobirribarra/SecureVault.git
+cd SecureVault
+
+# 2. Ejecutar setup (detecta Python automáticamente)
+.\scripts\setup_project.ps1
+
+# 3. Ejecutar servidores desde cualquier directorio
+.\scripts\run_servers_portable.ps1
+```
+
 ## 🏗️ Arquitectura
 
 ```
@@ -50,8 +72,11 @@ cd SecureVault
 # 4. Configurar base de datos
 .\scripts\setup_database.ps1
 
-# 5. Ejecutar servidores
-.\scripts\run_servers.ps1
+# 5. Ejecutar servidores (PORTABLE - recomendado)
+.\scripts\run_servers_portable.ps1
+
+# Alternativa: Script básico (requiere ejecutar desde raíz del proyecto)
+# .\scripts\run_servers.ps1
 ```
 
 ### 🔧 Opción 2: Manual (Paso a Paso)
