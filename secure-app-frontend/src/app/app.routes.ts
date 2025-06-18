@@ -13,13 +13,17 @@ export const routes: Routes = [
         path: 'auth/register',
         loadComponent: () => import('./pages/auth/register/register').then(c => c.Register),
         canActivate: [GuestGuard]
-    },
-
-    // Rutas protegidas (authenticated only)
+    },    // Rutas protegidas (authenticated only)
     {
         path: 'dashboard',
         loadComponent: () => import('./pages/dashboard/dashboard').then(c => c.Dashboard),
         canActivate: [AuthGuard]
+    },
+
+    // Callback para login social (sin guard)
+    {
+        path: 'auth/social-callback',
+        loadComponent: () => import('./pages/auth/social-callback/social-callback').then(c => c.SocialCallback)
     },
 
     // Redirecciones

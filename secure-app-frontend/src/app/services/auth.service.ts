@@ -158,6 +158,14 @@ export class AuthService {
     }
 
     /**
+     * Inicia el login con Google OAuth
+     */
+    loginWithGoogle(): void {
+        // Redirigir directamente a Django-allauth para Google OAuth
+        window.location.href = `http://localhost:8000/accounts/google/login/`;
+    }
+
+    /**
      * Obtiene el token de acceso
      */
     getAccessToken(): string | null {
@@ -283,5 +291,43 @@ export class AuthService {
 
         console.error('AuthService Error:', error);
         return throwError(() => ({ error: errorMessage, details: error }));
-    };
+    };    /**
+     * Maneja el login social guardando tokens y actualizando el estado
+     */
+    handleSocialLogin(accessToken: string, refreshToken: string): Observable<User> {
+        // Guardar tokens
+        localStorage.setItem('access_token', accessToken);
+        localStorage.setItem('refresh_token', refreshToken);
+
+        // Actualizar estado de autenticación
+        this.isAuthenticatedSubject.next(true);
+
+        // Cargar y actualizar información del usuario
+        return this.getCurrentUser().pipe(
+            tap(user => {
+                // El usuario ya se actualiza en getCurrentUser()
+                // Programar renovación automática del token si es necesario
+                try {
+                    const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                    const expiresIn = payload.exp - Math.floor(Date.now() / 1000);
+                    if (expiresIn > 0) {
+                        this.scheduleTokenRefresh(expiresIn);
+                    }
+                } catch (error) {
+                    console.warn('Error parsing token for auto-refresh:', error);
+                }
+            }),
+            catchError(error => {
+                this.clearSession();
+                return throwError(() => error);
+            })
+        );
+    }
+
+    /**
+     * Fuerza la verificación del estado de autenticación
+     */
+    forceCheckAuth(): void {
+        this.checkStoredAuth();
+    }
 }

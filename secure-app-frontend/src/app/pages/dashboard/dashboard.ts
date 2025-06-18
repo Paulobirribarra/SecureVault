@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { User } from '../../models/user.model';
 import { VaultFolder, VaultItem } from '../../models/vault.model';
 import { AuthService } from '../../services/auth.service';
@@ -23,15 +23,12 @@ export class Dashboard implements OnInit {
     weakPasswords: 0,
     duplicatePasswords: 0,
     lastSync: new Date()
-  };
-
-  constructor(
+  }; constructor(
     private authService: AuthService,
     private vaultService: VaultService,
-    private notificationService: NotificationService
-  ) { }
-
-  ngOnInit(): void {
+    private notificationService: NotificationService,
+    private router: Router
+  ) { } ngOnInit(): void {
     this.loadUserData();
     this.loadVaultData();
   }
@@ -84,10 +81,18 @@ export class Dashboard implements OnInit {
 
     return new Set(duplicates).size;
   }
-
   logout(): void {
-    this.authService.logout();
-    this.notificationService.success('Sesión cerrada', 'Has cerrado sesión correctamente');
+    this.authService.logout().subscribe({
+      next: () => {
+        this.notificationService.success('Sesión cerrada', 'Has cerrado sesión correctamente');
+        this.router.navigate(['/auth/login']);
+      },
+      error: () => {
+        // Incluso si hay error en el backend, limpiar sesión local y redirigir
+        this.notificationService.success('Sesión cerrada', 'Has cerrado sesión correctamente');
+        this.router.navigate(['/auth/login']);
+      }
+    });
   }
   getItemTypeIcon(item_type: string): string {
     switch (item_type) {

@@ -74,9 +74,8 @@ export class Login implements OnInit {
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;
   }
-
   loginWithGoogle(): void {
-    this.notificationService.info('Próximamente', 'Login con Google estará disponible pronto');
+    this.authService.loginWithGoogle();
   }
 
   get email() { return this.loginForm.get('email'); }
