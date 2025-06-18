@@ -44,9 +44,8 @@ def user_logged_in_handler(sender, request, user, **kwargs):
     # Actualizar último acceso
     user.last_login = timezone.now()
     user.save(update_fields=['last_login'])
-    
-    # Crear registro de sesión
-    if hasattr(request, 'session'):
+      # Crear registro de sesión
+    if hasattr(request, 'session') and request.session.session_key:
         # Obtener información de la request
         ip_address = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
@@ -66,8 +65,25 @@ def user_logged_in_handler(sender, request, user, **kwargs):
             session.last_activity = timezone.now()
             session.is_active = True
             session.save(update_fields=['last_activity', 'is_active'])
+        
+        logger.info(f'Usuario {user.email} inició sesión desde {ip_address}')
+    else:
+        # Si no hay session_key, solo log el login sin crear UserSession
+        ip_address = get_client_ip(request) if request else 'unknown'
+        logger.info(f'Usuario {user.email} inició sesión desde {ip_address} (sin session_key)')
     
-    logger.info(f'Usuario {user.email} inició sesión desde {ip_address}')
+    # Limpiar sesiones expiradas del usuario (máximo 5 sesiones activas)
+    active_sessions = UserSession.objects.filter(
+        user=user, 
+        is_active=True,
+        expires_at__gt=timezone.now()
+    ).order_by('-last_activity')
+    
+    if active_sessions.count() > 5:
+        # Desactivar las sesiones más antiguas
+        old_sessions = active_sessions[5:]
+        for old_session in old_sessions:
+            old_session.terminate()
 
 
 @receiver(user_login_failed)

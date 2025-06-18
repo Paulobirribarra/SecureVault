@@ -41,6 +41,8 @@ from .serializers import (
     UserSerializer, UserProfileSerializer, UserSessionSerializer,
     RegisterSerializer, LoginSerializer, PasswordChangeSerializer
 )
+from django.shortcuts import redirect
+import secrets
 
 logger = logging.getLogger(__name__)
 
@@ -604,6 +606,92 @@ class UserSessionViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({
                 'error': 'Error al terminar sesión'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SocialLoginRedirectView(APIView):
+    """Vista para manejar la redirección después del login social."""
+    permission_classes = [AllowAny]
+    
+    def get(self, request):
+        """Redirige al frontend con tokens JWT después del login social."""
+        if request.user.is_authenticated:
+            try:
+                # Generar tokens JWT para el usuario
+                refresh = RefreshToken.for_user(request.user)
+                access_token = refresh.access_token
+                  # Crear sesión de usuario
+                self.create_user_session(request, request.user)
+                
+                # Construir URL con tokens para el callback social
+                callback_url = f"http://localhost:4200/auth/social-callback?access_token={str(access_token)}&refresh_token={str(refresh)}"
+                
+                logger.info(f'Social login redirect for user: {request.user.email}')
+                return redirect(callback_url)
+                
+            except Exception as e:
+                logger.error(f'Error generating JWT tokens for social login: {str(e)}')
+                return redirect('http://localhost:4200/auth/login?error=token_generation_failed')
+        else:
+            # Error en la autenticación
+            logger.warning('Social login redirect without authenticated user')           
+        return redirect('http://localhost:4200/auth/login?error=social_login_failed')
+    
+    def create_user_session(self, request, user):
+        """Crea un registro de sesión de usuario con límite de sesiones activas."""
+        try:
+            ip_address = self.get_client_ip(request)
+            user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
+            session_key = request.session.session_key or secrets.token_hex(20)
+            
+            # Terminar sesiones expiradas del usuario
+            UserSession.objects.filter(
+                user=user,
+                expires_at__lt=timezone.now()
+            ).update(is_active=False)
+            
+            # Limitar a máximo 5 sesiones activas por usuario
+            active_sessions = UserSession.objects.filter(
+                user=user,
+                is_active=True
+            ).order_by('-last_activity')
+            
+            if active_sessions.count() >= 5:
+                # Terminar las sesiones más antiguas
+                old_sessions = active_sessions[4:]
+                for session in old_sessions:
+                    session.terminate()
+            
+            # Crear nueva sesión (o actualizar si ya existe)
+            session, created = UserSession.objects.get_or_create(
+                user=user,
+                session_key=session_key,
+                defaults={
+                    'ip_address': ip_address,
+                    'user_agent': user_agent,
+                    'expires_at': timezone.now() + timedelta(hours=24),
+                    'is_active': True
+                }
+            )
+            
+            if not created:
+                # Actualizar sesión existente
+                session.ip_address = ip_address
+                session.user_agent = user_agent
+                session.expires_at = timezone.now() + timedelta(hours=24)
+                session.is_active = True
+                session.save()
+            
+        except Exception as e:
+            logger.error(f'Error creating user session: {str(e)}')
+    
+    def get_client_ip(self, request):
+        """Obtiene la IP del cliente."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+        return ip
 
 
 # Vistas adicionales para OAuth, password reset, etc. se pueden agregar aquí

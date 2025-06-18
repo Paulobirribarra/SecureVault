@@ -32,6 +32,9 @@ urlpatterns = [
     path('auth/2fa/enable/', views.Enable2FAView.as_view(), name='enable-2fa'),
     path('auth/2fa/verify/', views.Verify2FAView.as_view(), name='verify-2fa'),
     
+    # OAuth Social Login
+    path('auth/social-redirect/', views.SocialLoginRedirectView.as_view(), name='social-redirect'),
+    
     # ViewSets
     path('', include(router.urls)),
     

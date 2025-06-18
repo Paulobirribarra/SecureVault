@@ -54,8 +54,7 @@ class CustomUserManager(BaseUserManager):
         try:
             # Buscar usuario existente por email
             user = self.get(email=email)
-            
-            # Si existe pero no es cuenta social, actualizar campos sociales
+              # Si existe pero no es cuenta social, actualizar campos sociales
             if not user.is_social_account:
                 user.is_social_account = True
                 user.email_verified = True  # Las cuentas sociales vienen verificadas
@@ -67,6 +66,9 @@ class CustomUserManager(BaseUserManager):
             extra_fields.setdefault('is_social_account', True)
             extra_fields.setdefault('email_verified', True)
             extra_fields.setdefault('is_active', True)
+            # IMPORTANTE: Asegurar que NO tenga permisos de admin por defecto
+            extra_fields.setdefault('is_staff', False)
+            extra_fields.setdefault('is_superuser', False)
             
             user = self.model(email=email, **extra_fields)
             user.save(using=self._db)
@@ -205,10 +207,23 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         """Retorna el nombre completo del usuario."""
         full_name = f'{self.first_name} {self.last_name}'.strip()
         return full_name or self.email
-    
     def get_short_name(self):
         """Retorna el nombre corto del usuario."""
         return self.first_name or self.email.split('@')[0]
+    
+    def get_username(self):
+        """Retorna el username del usuario para compatibilidad con django-allauth."""
+        return self.email
+    
+    @property
+    def username(self):
+        """Propiedad username para compatibilidad con django-allauth."""
+        return self.email
+    
+    @username.setter
+    def username(self, value):
+        """Setter para username - asigna el valor al email."""
+        self.email = value
     
     def email_user(self, subject, message, from_email=None, **kwargs):
         """Envía un email al usuario."""

@@ -202,13 +202,29 @@ SOCIALACCOUNT_PROVIDERS = {
 
 # Django Allauth
 SITE_ID = 1
+ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Solo usar email para autenticación
+ACCOUNT_USERNAME_REQUIRED = False  # No requerir username
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Cambiado a opcional por ahora
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-LOGIN_REDIRECT_URL = '/api/v1/auth/profile/'
-LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_USER_MODEL_USERNAME_FIELD = 'email'  # Especificar que usamos email como username
+ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'  # Campo de email en el modelo
+ACCOUNT_USERNAME_VALIDATORS = []  # Deshabilitar validadores de username
+LOGIN_REDIRECT_URL = '/api/v1/usuarios/auth/social-redirect/'  # Redirigir a nuestra vista personalizada
+LOGOUT_REDIRECT_URL = 'http://localhost:4200/'  # Redirigir al frontend
+
+# Django Allauth - Configuración adicional
+SOCIALACCOUNT_ADAPTER = 'usuarios.adapters.SocialAccountAdapter'
+ACCOUNT_ADAPTER = 'usuarios.adapters.AccountAdapter'
+
+# Configuraciones adicionales para login social
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Permitir login automático en GET
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Registro automático para cuentas sociales
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'  # Sin verificación para cuentas sociales
+SOCIALACCOUNT_EMAIL_REQUIRED = False  # No requerir email adicional
+SOCIALACCOUNT_QUERY_EMAIL = True  # Obtener email del proveedor social
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
