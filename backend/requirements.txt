@@ -3,6 +3,9 @@ Django==4.2.23
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 
+# Core Python packages
+setuptools>=68.0.0
+
 # Authentication & JWT
 djangorestframework-simplejwt==5.3.0
 django-allauth==0.57.0
@@ -18,7 +21,7 @@ django-ratelimit==4.1.0
 # Two Factor Authentication
 pyotp==2.9.0
 qrcode==7.4.2
-Pillow==10.1.0
+Pillow>=10.1.0
 
 # Database
 psycopg==3.1.13
